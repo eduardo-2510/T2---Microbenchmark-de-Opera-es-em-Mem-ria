@@ -62,26 +62,24 @@ def PERFORM_TESTS(log_file, num_testes=100):
 
             # Acumula as medições na lista
             resultados.append({
-                "block_size_bytes": block_size,
-                "block_size_mb": block_size_mb,
-                "test_num": test_num,
-                "allocation_time_ms": allocation_time_ms,
-                "write_time_ms": write_time_ms,
-                "read_time_ms": read_time_ms,
-                "free_time_ms": free_time_ms
+                "block_MB": block_size_mb,
+                "teste": test_num,
+                "alloc_ms": allocation_time_ms,
+                "write_ms": write_time_ms,
+                "read_ms": read_time_ms,
+                "free_ms": free_time_ms
             })
 
     # Persistência no arquivo CSV apenas no final do teste
     print(f"\nSalvando os dados no arquivo CSV: {log_file}...")
     
     colunas = [
-        "block_size_bytes",
-        "block_size_mb",
-        "test_num",
-        "allocation_time_ms",
-        "write_time_ms",
-        "read_time_ms",
-        "free_time_ms"
+        "block_MB",
+        "teste",
+        "alloc_ms",
+        "write_ms",
+        "read_ms",
+        "free_ms"
     ]
 
     with open(log_file, mode="w", newline="", encoding="utf-8") as f:
