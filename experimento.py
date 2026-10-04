@@ -26,7 +26,6 @@ def PERFORM_TESTS(log_file, num_testes=100):
     BLOCK_STEP = 100 * 1024 * 1024     # 100 MB em bytes
 
     resultados = []
-
     print("Iniciando o microbenchmark de memória...")
 
     # Laço externo: tamanho de bloco
@@ -94,4 +93,6 @@ def PERFORM_TESTS(log_file, num_testes=100):
 
 # Execução do experimento
 if __name__ == "__main__":
-    PERFORM_TESTS("memory_benchmark_results.csv", num_testes=100)
+    sistema = input("Digite o Sistema Operacional (ex: Windows, Linux): ")
+    nome_arquivo = f"{sistema}_results.csv"
+    PERFORM_TESTS(nome_arquivo, num_testes=100)
