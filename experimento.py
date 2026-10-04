@@ -1,67 +1,97 @@
+import csv
 import time
 
-#Medir tempo 
+# FUNÇÕES DE OPERAÇÕES DE MEMÓRIA
 
-inicio = time.perf_counter_ns()
+def alocacao(block_size):
+    return bytearray(block_size)
 
-# operação cujo tempo queremos observar
-soma = sum(range(1_000_000)) # soma os números de 0 a 999.999
+def escrita(bloco):
+    padrao = b'\xAA' * len(bloco)
+    bloco[:] = padrao
 
-fim = time.perf_counter_ns()
+def leitura(bloco):
+    return sum(bloco)
 
-delta_ns = fim - inicio
-delta_ms = delta_ns / 1_000_000
+def liberacao(bloco):
+    bloco.clear()
+    del bloco
 
-print("Tempo em nanossegundos:", delta_ns)
-print(f"Tempo em milissegundos: {delta_ms:.6f} ms")
+# --- FUNÇÃO PRINCIPAL DO EXPERIMENTO ---
 
-#Fim de medição de tempo
+def PERFORM_TESTS(log_file, num_testes=100):
+    # Configurações de tamanho (de 100MB até 1000MB com passo de 100MB)
+    MIN_BLOCK_SIZE = 100 * 1024 * 1024  # 100 MB em bytes
+    MAX_BLOCK_SIZE = 1000 * 1024 * 1024 # 1000 MB em bytes
+    BLOCK_STEP = 100 * 1024 * 1024     # 100 MB em bytes
 
-#Converter tamanho de bloco de memória de MB para bytes
-tamanho = 1024  # bytes; tamanho para demonstração #1Kb
+    resultados = []
 
-t0 = time.perf_counter_ns() #tempo inicial
-bloco = bytearray(tamanho) #alocando memória
-t1 = time.perf_counter_ns() # tempo final
+    print("Iniciando o microbenchmark de memória...")
 
-alloc_ms = (t1 - t0) / 1_000_000
+    # Laço externo: tamanho de bloco
+    for block_size in range(MIN_BLOCK_SIZE, MAX_BLOCK_SIZE + BLOCK_STEP, BLOCK_STEP):
+        block_size_mb = block_size // (1024 * 1024)
+        print(f"Executando para bloco de {block_size_mb} MB...")
 
-print("Quantidade de bytes:", len(bloco))
-print(f"Tempo de alocação: {alloc_ms:.6f} ms")
-print(list(bloco))
+        # Laço interno: ensaios / repetições
+        for test_num in range(1, num_testes + 1):
+            
+            # 1. Alocação
+            t0 = time.perf_counter_ns()
+            bloco = alocacao(block_size)
+            t1 = time.perf_counter_ns()
+            allocation_time_ms = (t1 - t0) / 1_000_000
 
-#Escrita
-bloco_teste = bytearray(10)
-padrao = b'\xAA' * len(bloco_teste)  # dez bytes; preparado fora da medição
+            # 2. Escrita
+            t2 = time.perf_counter_ns()
+            escrita(bloco)
+            t3 = time.perf_counter_ns()
+            write_time_ms = (t3 - t2) / 1_000_000
 
-t2 = time.perf_counter_ns()
-bloco_teste[:] = padrao
-t3 = time.perf_counter_ns()
+            # 3. Leitura
+            t4 = time.perf_counter_ns()
+            soma_leitura = leitura(bloco)
+            t5 = time.perf_counter_ns()
+            read_time_ms = (t5 - t4) / 1_000_000
 
-write_ms = (t3 - t2) / 1_000_000
+            # 4. Liberação
+            t6 = time.perf_counter_ns()
+            liberacao(bloco)
+            t7 = time.perf_counter_ns()
+            free_time_ms = (t7 - t6) / 1_000_000
 
-print(f"Tempo de escrita: {write_ms:.6f} ms")
-print("Tamanho após a escrita:", len(bloco_teste))  # 10
+            # Acumula as medições na lista
+            resultados.append({
+                "block_size_bytes": block_size,
+                "block_size_mb": block_size_mb,
+                "test_num": test_num,
+                "allocation_time_ms": allocation_time_ms,
+                "write_time_ms": write_time_ms,
+                "read_time_ms": read_time_ms,
+                "free_time_ms": free_time_ms
+            })
 
-#Leitura
-bloco = bytearray([1, 2, 3, 4, 5])
+    # Persistência no arquivo CSV apenas no final do teste
+    print(f"\nSalvando os dados no arquivo CSV: {log_file}...")
+    
+    colunas = [
+        "block_size_bytes",
+        "block_size_mb",
+        "test_num",
+        "allocation_time_ms",
+        "write_time_ms",
+        "read_time_ms",
+        "free_time_ms"
+    ]
 
-t4 = time.perf_counter_ns()
-soma = sum(bloco)
-t5 = time.perf_counter_ns()
+    with open(log_file, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=colunas)
+        writer.writeheader()
+        writer.writerows(resultados)
 
-read_ms = (t5 - t4) / 1_000_000
+    print("Concluído com sucesso!")
 
-print("Soma calculada:", soma)
-print(f"Tempo de leitura: {read_ms:.6f} ms")
-
-#Liberação de memória
-bloco = bytearray(10)
-
-t6 = time.perf_counter_ns()
-bloco.clear()
-del bloco
-t7 = time.perf_counter_ns()
-
-free_ms = (t7 - t6) / 1_000_000
-print(f"Tempo medido: {free_ms:.6f} ms")
+# Execução do experimento
+if __name__ == "__main__":
+    PERFORM_TESTS("memory_benchmark_results.csv", num_testes=100)
