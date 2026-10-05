@@ -19,6 +19,7 @@ O benchmark mede o tempo de execução (em milissegundos) para quatro operaçõe
 - **Alocação Instantânea:** O Linux tirou partido de *Lazy Allocation* / *Overcommit*, efetuando alocações em **< 16 ms**, enquanto o Windows variou entre **30 ms e 400 ms**.
 - **Impacto do Swap (4 GB vs 8 GB):** No **Linux (4 GB)**, ao atingir blocos de 1000 MB, ocorreu um pico no tempo de escrita (**1199 ms**) devido ao uso de memória *swap*. Este gargalo não ocorreu no ambiente com **8 GB de RAM** (**71 ms**).
 
+![Gráficos Comparativos](Graficos.png)
 ---
 
 ## 📁 Estrutura dos Ficheiros
